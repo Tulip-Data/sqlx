@@ -1892,3 +1892,25 @@ func TestIn130Regression(t *testing.T) {
 		}
 	})
 }
+
+func TestPostgresJSONBOperators(t *testing.T) {
+	q1 := `SELECT * FROM foo WHERE ARRAY[?,?] ?& f->'type'`
+	q2 := `SELECT * FROM foo WHERE ARRAY[?,?] ?| f->'type'`
+	q3 := `SELECT * FROM foo WHERE ARRAY[?,?] ?| f->'type' AND bar=?`
+
+	s1 := Rebind(DOLLAR, q1)
+	s2 := Rebind(DOLLAR, q2)
+	s3 := Rebind(DOLLAR, q3)
+
+	if s1 != `SELECT * FROM foo WHERE ARRAY[$1,$2] ?& f->'type'` {
+		t.Errorf("q1 failed")
+	}
+
+	if s2 != `SELECT * FROM foo WHERE ARRAY[$1,$2] ?| f->'type'` {
+		t.Errorf("q2 failed")
+	}
+
+	if s3 != `SELECT * FROM foo WHERE ARRAY[$1,$2] ?| f->'type' AND bar=$3` {
+		t.Errorf("q3 failed")
+	}
+}

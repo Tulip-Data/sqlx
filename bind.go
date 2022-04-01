@@ -69,6 +69,15 @@ func Rebind(bindType int, query string) string {
 	var i, j int
 
 	for i = strings.Index(query, "?"); i != -1; i = strings.Index(query, "?") {
+
+		// Special handling for Postgres JSONB operators '?&' and '?|' where they
+		// should not be included as parameters in the rebind.
+		if len(query) > i+1 && (query[i+1] == '&' || query[i+1] == '|') {
+			rqb = append(rqb, query[:i+2]...)
+			query = query[i+2:]
+			continue
+		}
+
 		rqb = append(rqb, query[:i]...)
 
 		switch bindType {
